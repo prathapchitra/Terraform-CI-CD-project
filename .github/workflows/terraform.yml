@@ -18,6 +18,11 @@ jobs:
     name: Terraform Validate and Plan
     runs-on: ubuntu-latest
 
+    env:
+      TF_VAR_ami_id: ${{ vars.AMI_ID }}
+      TF_VAR_key_name: ${{ vars.KEY_NAME }}
+      TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -41,4 +46,4 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -input=false
