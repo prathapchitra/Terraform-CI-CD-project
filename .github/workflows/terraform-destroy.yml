@@ -1,0 +1,50 @@
+
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: "Confirm that you want to destroy Terraform resources"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  destroy:
+    name: Destroy AWS Infrastructure
+    if: ${{ inputs.confirm_destroy == true }}
+    runs-on: ubuntu-latest
+
+    environment: terraform-destroy
+
+    env:
+      TF_VAR_ami_id: ${{ vars.AMI_ID }}
+      TF_VAR_key_name: ${{ vars.KEY_NAME }}
+      TF_VAR_aws_region: ${{ vars.AWS_REGION }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy Plan
+        run: terraform plan -destroy -input=false
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -input=false
